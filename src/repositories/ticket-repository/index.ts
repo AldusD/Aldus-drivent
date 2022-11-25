@@ -1,58 +1,70 @@
 import { prisma } from "@/config";
-import { Enrollment, Prisma, Ticket, TicketType } from "@prisma/client";
+import { Ticket, TicketStatus } from "@prisma/client";
 
-async function findTicketTypes () {
-    return await prisma.ticketType.findMany();
-};
-
-async function findTicketTypeByid (ticketTypeId: number) {
-    return await prisma.ticketType.findUnique({
-        where: {
-            id: ticketTypeId
-        }
-    })
-};
-
-async function findUserTickets (userId: number) {
-    return await prisma.ticket.findFirst({
-        include: {
-            TicketType: true
-        },
-        
-        where: {
-            Enrollment: {
-                User: {
-                    id: userId
-                }
-            }
-        }
-    });
-};
-
-async function findEnrollmentByUserId (userId: number) {
-    return await prisma.enrollment.findUnique({
-        where: {
-            userId
-        }
-    })
+async function findTicketTypes() {
+  return prisma.ticketType.findMany();
 }
 
-async function createTicket (ticketTypeId: number, enrollmentId: number) {
-    return await prisma.ticket.create({
-        data: {
-            enrollmentId,
-            ticketTypeId,
-            status: 'RESERVED'            
-        }
-    });
+async function findTickeyById(ticketId: number) {
+  return prisma.ticket.findFirst({
+    where: {
+      id: ticketId,
+    },
+    include: {
+      Enrollment: true,
+    }
+  });
 }
+async function findTickeWithTypeById(ticketId: number) {
+  return prisma.ticket.findFirst({
+    where: {
+      id: ticketId,
+    },
+    include: {
+      TicketType: true,
+    }
+  });
+}
+
+async function findTicketByEnrollmentId(enrollmentId: number) {
+  return prisma.ticket.findFirst({
+    where: {
+      enrollmentId,
+    },
+    include: {
+      TicketType: true, //inner join
+    }
+  });
+}
+
+async function createTicket(ticket: CreateTicketParams) {
+  return prisma.ticket.create({
+    data: {
+      ...ticket,
+    }
+  });
+}
+
+async function ticketProcessPayment(ticketId: number) {
+  return prisma.ticket.update({
+    where: {
+      id: ticketId,
+    },
+    data: {
+      status: TicketStatus.PAID,
+    }
+  });
+}
+
+export type CreateTicketParams = Omit<Ticket, "id" | "createdAt" | "updatedAt">
 
 const ticketRepository = {
-    findTicketTypes,
-    findTicketTypeByid,
-    findUserTickets,
-    findEnrollmentByUserId,
-    createTicket
+  findTicketTypes,
+  findTicketByEnrollmentId,
+  createTicket,
+  findTickeyById,
+  findTickeWithTypeById,
+  ticketProcessPayment,
 };
 
 export default ticketRepository;

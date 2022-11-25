@@ -1,15 +1,13 @@
-import { insertTicket, sendTicketsTypes, sendUserTickets } from "@/controllers";
-import { authenticateToken } from "@/middlewares";
 import { Router } from "express";
+import { authenticateToken } from "@/middlewares";
+import { getTicketTypes, getTickets, createTicket } from "@/controllers";
 
 const ticketsRouter = Router();
 
-const notImplemented: any = (_: any, res: any) => {res.sendStatus(501)}
-
 ticketsRouter
-    .all("/*", (authenticateToken))
-    .get("/types", sendTicketsTypes)
-    .get("/", sendUserTickets)
-    .post("/", insertTicket);
+  .all("/*", authenticateToken)
+  .get("/types", getTicketTypes)
+  .get("", getTickets)
+  .post("", createTicket);
 
 export { ticketsRouter };
