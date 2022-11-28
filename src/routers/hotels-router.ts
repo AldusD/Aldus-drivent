@@ -1,10 +1,14 @@
-import { Router } from "express";
+import { Router, Response } from "express";
 import { authenticateToken } from "@/middlewares";
-import { getTicketTypes, getTickets, createTicket } from "@/controllers";
+import { getHotels } from "@/controllers";
 
 const hotelsRouter = Router();
 
-hotelsRouter
-  .all("/*", authenticateToken);
+const notImplemented = (_: any, res: Response) => { res.sendStatus(501) };
 
+hotelsRouter
+  .all("/*", authenticateToken)
+  .get("/", getHotels)
+  .get("/:hotelId", notImplemented);
+  
 export { hotelsRouter };
