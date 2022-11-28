@@ -1,4 +1,5 @@
 import { prisma } from "@/config";
+import { TicketStatus } from "@prisma/client";
 
 async function findHotels () {
     return await prisma.hotel.findMany();
@@ -12,26 +13,31 @@ async function findHotelPaidTicketByUserId (userId: number) {
             },
             TicketType: {
                 includesHotel: true
-            }
+            },
+            status: TicketStatus.PAID            
         },
 
         include: {
             Enrollment: true,
-            TicketType: true
+            TicketType: true,
         }
     })
 }
 
 async function findHotelRoomsById (hotelId: number) {
-    return await prisma.Room.findMany({
+    return await prisma.room.findMany({
         where: {
-            id: hotelId
+            hotelId
         }
     });
 }
 
 async function findHotelById (hotelId: number) {
-    return await prisma.hotel.findFirst({ hotelId });
+    return await prisma.hotel.findFirst({ 
+        where: {
+            id: hotelId
+        }
+    });
 }
 
 const hotelRepository = {

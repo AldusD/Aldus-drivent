@@ -29,6 +29,6 @@ export async function listHotelRooms (hotelId: number) {
         image: hotel.image,
         createdAt: hotel.createdAt,
         updatedAt: hotel.updatedAt,
-        rooms: [...rooms]
+        rooms
     };
 }
