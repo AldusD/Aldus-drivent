@@ -2,6 +2,7 @@ import { forbiddenError, notFoundError } from "@/errors";
 import bookingRepository from "@/repositories/booking-repository";
 import enrollmentRepository from "@/repositories/enrollment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
+import { FORBIDDEN } from "http-status";
 
 async function listUserBooking(userId: number) {
   const booking = await bookingRepository.findBookingByUserId(userId);
@@ -24,10 +25,17 @@ async function insertBooking(userId: number, roomId: number) {
 }
 
 async function changeBooking(userId: number, bookingId: number, roomId: number) {
-  const booking = await listUserBooking(userId);
+  const booking = await bookingRepository.findBookingByUserId(userId);
+  if (!booking) {
+    throw forbiddenError("User does not have a booking yet");
+  }
   if (booking.id !== bookingId) {
     throw forbiddenError("Booking id selected do not points to user's booking");
   }
+  if (booking.roomId === roomId) {
+    throw forbiddenError("the new room shall be different than the previous one");
+  }
+
   await validateRoom(roomId);
 
   return await bookingRepository.updateBooking(booking.id, roomId);
@@ -40,7 +48,7 @@ const validateTicket = async (userId: number) => {
   }
 
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
-  if (ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
     throw forbiddenError("User does not have a paid ticket valid for booking");
   }
 
