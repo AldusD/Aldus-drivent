@@ -1,14 +1,12 @@
-import { Router, Response } from "express";
+import { Router } from "express";
 import { authenticateToken } from "@/middlewares";
-import { getHotelRoomsById, getHotels } from "@/controllers";
+import { getHotels, getHotelsWithRooms } from "@/controllers";
 
 const hotelsRouter = Router();
-
-const notImplemented = (_: any, res: Response) => { res.sendStatus(501) };
 
 hotelsRouter
   .all("/*", authenticateToken)
   .get("/", getHotels)
-  .get("/:hotelId", getHotelRoomsById);
-  
+  .get("/:hotelId", getHotelsWithRooms);
+
 export { hotelsRouter };

@@ -1,50 +1,23 @@
 import { prisma } from "@/config";
-import { TicketStatus } from "@prisma/client";
 
-async function findHotels () {
-    return await prisma.hotel.findMany();
+async function findHotels() {
+  return prisma.hotel.findMany();
 }
 
-async function findHotelPaidTicketByUserId (userId: number) {
-    return await prisma.ticket.findFirst({
-        where: {
-            Enrollment: {
-                userId
-            },
-            TicketType: {
-                includesHotel: true
-            },
-            status: TicketStatus.PAID            
-        },
-
-        include: {
-            Enrollment: true,
-            TicketType: true,
-        }
-    })
-}
-
-async function findHotelRoomsById (hotelId: number) {
-    return await prisma.room.findMany({
-        where: {
-            hotelId
-        }
-    });
-}
-
-async function findHotelById (hotelId: number) {
-    return await prisma.hotel.findFirst({ 
-        where: {
-            id: hotelId
-        }
-    });
+async function findRoomsByHotelId(hotelId: number) {
+  return prisma.hotel.findFirst({
+    where: {
+      id: hotelId,
+    },
+    include: {
+      Rooms: true,
+    }
+  });
 }
 
 const hotelRepository = {
-    findHotelPaidTicketByUserId,
-    findHotels,
-    findHotelRoomsById,
-    findHotelById
+  findHotels,
+  findRoomsByHotelId,
 };
 
-export default  hotelRepository;
+export default hotelRepository;

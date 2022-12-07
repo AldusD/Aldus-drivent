@@ -1,34 +1,43 @@
-import { notFoundError, unauthorizedError } from "@/errors";
 import hotelRepository from "@/repositories/hotel-repository";
+import enrollmentRepository from "@/repositories/enrollment-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import { notFoundError } from "@/errors";
+import { cannotListHotelsError } from "@/errors/cannot-list-hotels-error";
 
-export async function listHotels (userId: number) {
-    const hasPaidTicket = await verifyHotelPaidTicket(userId);
-    if(!hasPaidTicket) {
-        throw unauthorizedError();
-    }
-    
-    return await hotelRepository.findHotels();
+async function listHotels(userId: number) {
+  //Tem enrollment?
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) {
+    throw notFoundError();
+  }
+  //Tem ticket pago isOnline false e includesHotel true
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+
+  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+    throw cannotListHotelsError();
+  }
 }
 
-async function verifyHotelPaidTicket (userId: number) {
-    const hotelPaidTicket = await hotelRepository.findHotelPaidTicketByUserId(userId);
-    
-    if(!hotelPaidTicket) {
-        return false;
-    }
-    return true;
+async function getHotels(userId: number) {
+  await listHotels(userId);
+
+  const hotels = await hotelRepository.findHotels();
+  return hotels;
 }
 
-export async function listHotelRooms (hotelId: number) {
-    const hotel = await hotelRepository.findHotelById(hotelId);
-    const rooms = await hotelRepository.findHotelRoomsById(hotelId);
+async function getHotelsWithRooms(userId: number, hotelId: number) {
+  await listHotels(userId);
+  const hotel = await hotelRepository.findRoomsByHotelId(hotelId);
 
-    return {
-        id: hotel.id,
-        name: hotel.name,
-        image: hotel.image,
-        createdAt: hotel.createdAt,
-        updatedAt: hotel.updatedAt,
-        rooms
-    };
+  if (!hotel) {
+    throw notFoundError();
+  }
+  return hotel;
 }
+
+const hotelService = {
+  getHotels,
+  getHotelsWithRooms,
+};
+
+export default hotelService;
